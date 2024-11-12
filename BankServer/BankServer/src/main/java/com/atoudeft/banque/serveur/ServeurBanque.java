@@ -84,6 +84,28 @@ public class ServeurBanque extends Serveur {
      * du TP).
      */
     public void supprimeInactifs() {
-        //À définir :
+        ListIterator<Connexion> iterateur = connectes.listIterator();
+
+        //Permet de verifier pour tout les utilisateurs connecter
+        while (iterateur.hasNext()) {
+
+            //'(ConnexionBanque)' permet de transformer l'objet renvoyer par 'iterateur.next()' en un objet ConnexionBanque a la place de Connexion (ConnexionBanque est une sousclassse de Connexion)
+            ConnexionBanque connexion = (ConnexionBanque) iterateur.next();
+
+            //Vérifie si la connexion est inactive depuis DELAI_INACTIVITE
+            if (connexion.estInactifDepuis(DELAI_INACTIVITE)) {
+
+                //Envoie "END" au client pour signaler la fin de session
+                connexion.envoyer("END");
+
+                //Ferme la connexion
+                connexion.close();
+
+                //Supprime la connexion de la liste des connectés
+                iterateur.remove();
+
+                }
+            }
+        }
     }
 }
