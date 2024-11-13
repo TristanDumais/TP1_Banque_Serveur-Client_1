@@ -123,7 +123,20 @@ public class Banque implements Serializable {
      * @return numéro du compte-chèque du client ayant le numéro de compte-client
      */
     public String getNumeroCompteParDefaut(String numCompteClient) {
-        //À compléter : retourner le numéro du compte-chèque du compte-client.
-        return null; //À modifier
+        CompteClient compteClient = (CompteClient) getCompteClient(numCompteClient);
+        //Verifier qu'il existe
+        if (compteClient != null) {
+
+            // Parcourt chaque compte bancaire du compte-client
+            for (CompteBancaire compte : compteClient.getComptes()) {
+
+                // Vérifie si le compte est un CompteCheque
+                if (compte instanceof CompteCheque) {
+                    return compte.getNumero();
+                }
+            }
+        }
+
+        return null;
     }
 }
