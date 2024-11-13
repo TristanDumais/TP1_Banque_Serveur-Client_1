@@ -21,7 +21,7 @@ public class Banque implements Serializable {
      * @param numeroCompteClient le numéro du compte-client
      * @return le compte-client s'il a été trouvé. Sinon, retourne null
      */
-    public CompteClient getCompteClient(String numeroCompteClient) {
+    public Object getCompteClient(String numeroCompteClient) {  //JAI CHANGER BOOL TO OBJECT MAIS IDK SI JE POUVAIS
         CompteClient cpt = new CompteClient(numeroCompteClient,"");
         int index = this.comptes.indexOf(cpt);
         if (index != -1)
@@ -100,21 +100,20 @@ public class Banque implements Serializable {
         if (!nip.matches("^[0-9]{4,5}$")){
             return false;
         }
+        if (getCompteClient(numCompteClient) != null){
+            return false;
+        }
 
-        /*À compléter et modifier :
-            - Vérifier que le numéro a entre 6 et 8 caractères et ne contient que des lettres majuscules et des chiffres.
-              Sinon, retourner false.
-            - Vérifier que le nip a entre 4 et 5 caractères et ne contient que des chiffres. Sinon,
-              retourner false.
-            - Vérifier s'il y a déjà un compte-client avec le numéro, retourner false.
-            - Sinon :
-                . Créer un compte-client avec le numéro et le nip;
-                . Générer (avec CompteBancaire.genereNouveauNumero()) un nouveau numéro de compte bancaire qui n'est
-                  pas déjà utilisé;
-                . Créer un compte-chèque avec ce numéro et l'ajouter au compte-client;
-                . Ajouter le compte-client à la liste des comptes et retourner true.
-         */
-        return this.comptes.add(new CompteClient(numCompteClient,nip)); //À modifier
+        CompteClient compteClient = new CompteClient(numCompteClient, nip);
+        String numeroCompteBancaire = CompteBancaire.genereNouveauNumero();
+        CompteCheque compteCheque = new CompteCheque(numeroCompteBancaire, 0);
+
+        //Ajoute le compte cheque au compte du client
+        compteClient.ajouter(compteCheque);
+        //Ne pas oublier
+        comptes.add(compteClient);
+
+        return true;
     }
 
     /**

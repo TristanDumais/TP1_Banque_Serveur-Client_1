@@ -1,9 +1,15 @@
 package com.atoudeft.banque;
 
-public class CompteCheque extends CompteBancaire {
+import java.io.Serializable;
 
-    public CompteCheque(String numero) {
+public class CompteCheque extends CompteBancaire implements Serializable {
+    private final String numero;
+    private double solde;
+
+    public CompteCheque(String numero, double solde) {
         super(numero, TypeCompte.CHEQUE);
+        this.numero = numero;
+        this.solde = solde;
     }
 
     @Override
