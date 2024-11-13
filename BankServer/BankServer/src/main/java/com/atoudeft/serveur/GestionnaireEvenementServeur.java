@@ -80,7 +80,23 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                             cnx.envoyer("NOUVEAU NO "+t[0]+" existe");
                     }
                     break;
-                /******************* TRAITEMENT PAR DÉFAUT *******************/
+                case "EPARGNE": //Creer un compte epargne :
+                    banque = serveurBanque.getBanque();
+                    numCompteClient = cnx.getNumeroCompteClient();
+
+                    //Si le client n'est pas connecter
+                    if (cnx.getNumeroCompteClient() == null){
+                        cnx.envoyer("EPARGNE NO");
+                        break;
+                    }
+                    //Si le client a deja un compte epargne
+                    if (banque.clientAEpargne(numCompteClient)){
+                        cnx.envoyer("EPARGNE NO");
+                        break;
+                    }
+
+
+                    /******************* TRAITEMENT PAR DÉFAUT *******************/
                 default: //Renvoyer le texte recu convertit en majuscules :
                     msg = (evenement.getType() + " " + evenement.getArgument()).toUpperCase();
                     cnx.envoyer(msg);
