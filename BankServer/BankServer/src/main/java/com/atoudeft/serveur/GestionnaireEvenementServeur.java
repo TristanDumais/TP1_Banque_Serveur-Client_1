@@ -1,6 +1,9 @@
 package com.atoudeft.serveur;
 
 import com.atoudeft.banque.Banque;
+import com.atoudeft.banque.CompteBancaire;
+import com.atoudeft.banque.CompteClient;
+import com.atoudeft.banque.CompteEpargne;
 import com.atoudeft.banque.serveur.ConnexionBanque;
 import com.atoudeft.banque.serveur.ServeurBanque;
 import com.atoudeft.commun.evenement.Evenement;
@@ -94,6 +97,22 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("EPARGNE NO");
                         break;
                     }
+                    // Generation d'un numero de compte unique
+                    String numeroCompteEpargne;
+                    do {
+                        numeroCompteEpargne = CompteBancaire.genereNouveauNumero();
+                    } while (banque.getCompteClient(numeroCompteEpargne) != null);
+
+                    // Creation du compte Epargne avec un taux d'interet de 5%
+                    CompteEpargne compteEpargne = new CompteEpargne(numeroCompteEpargne, 0, 0.05);
+
+                    //Le link au bon client
+                    CompteClient compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
+                    compteClient.ajouter(compteEpargne);
+
+                    //Confirmation
+                    cnx.envoyer("EPARGNE OK compte epargne cree");
+                    break;
 
 
                     /******************* TRAITEMENT PAR DÉFAUT *******************/
