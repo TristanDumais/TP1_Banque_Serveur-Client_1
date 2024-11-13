@@ -94,6 +94,13 @@ public class Banque implements Serializable {
      * @return true si le compte a été créé correctement
      */
     public boolean ajouter(String numCompteClient, String nip) {
+        if (!numCompteClient.matches("^[A-Z0-9]{6,8}$")){
+            return false;
+        }
+        if (!nip.matches("^[0-9]{4,5}$")){
+            return false;
+        }
+
         /*À compléter et modifier :
             - Vérifier que le numéro a entre 6 et 8 caractères et ne contient que des lettres majuscules et des chiffres.
               Sinon, retourner false.
