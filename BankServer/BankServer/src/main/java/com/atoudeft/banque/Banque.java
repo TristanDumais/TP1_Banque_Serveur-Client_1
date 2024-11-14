@@ -139,6 +139,27 @@ public class Banque implements Serializable {
 
         return null;
     }
+
+    /**
+     * Permet d'obtenir le numero du compte epargne du client
+     * @param numeroCompteClient
+     * @return numero du compte epargne
+     */
+    public String getNumeroCompteEpargne(String numeroCompteClient) {
+        CompteClient compteClient = (CompteClient) getCompteClient(numeroCompteClient);
+        if (compteClient != null) {
+
+            //Trouver le compte epargne
+            for (CompteBancaire compte : compteClient.getComptes()) {
+                if (compte instanceof CompteEpargne) {
+                    return compte.getNumero();
+                }
+            }
+        }
+        //null si le compte n'existe pas
+        return null;
+    }
+
     public boolean clientAEpargne(String numeroCompteClient){
         CompteClient compteClient = (CompteClient) getCompteClient(numeroCompteClient);
         //Verifier qu'il existe

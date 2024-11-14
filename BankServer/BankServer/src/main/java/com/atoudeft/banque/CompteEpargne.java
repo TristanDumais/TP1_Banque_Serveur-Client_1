@@ -1,5 +1,4 @@
 package com.atoudeft.banque;
-
 import java.io.Serializable;
 
 public class CompteEpargne extends CompteBancaire implements Serializable {
@@ -16,7 +15,6 @@ public class CompteEpargne extends CompteBancaire implements Serializable {
         this.solde = solde;
         this.tauxInteret = tauxInteret;
     }
-
     @Override
     public boolean crediter(double montant){
         if (montant > 0){
@@ -24,7 +22,6 @@ public class CompteEpargne extends CompteBancaire implements Serializable {
         }
         return false;
     }
-
     @Override
     public boolean debiter(double montant) {
         if (montant > 0 || this.solde - montant > 0){
@@ -35,18 +32,14 @@ public class CompteEpargne extends CompteBancaire implements Serializable {
         }
         return false;
     }
-
     @Override
     public boolean payerFacture(String numeroFacture, double montant, String description) {
         return false;
     }
-
     @Override
     public boolean transferer(double montant, String numeroCompteDestinataire) {
         return false;
     }
-
-
     public boolean ajouterInterets(){
         this.solde += this.solde * (this.tauxInteret);
         return false;
