@@ -143,9 +143,123 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("SELECT NO");
                     }
                     break;
+                case "DEPOT":   //Depose de l'argent dans le compte actuel
+                    banque = serveurBanque.getBanque();
+                    String compteActuel = cnx.getNumeroCompteActuel();
+
+                    //Verifie que le compte existe
+                    if (compteActuel == null) {
+                        cnx.envoyer("DEPOT NO");
+                        break;
+                    }
+
+                    try {
+                        //Conversion String Double
+                        double montantDepot = Double.parseDouble(evenement.getArgument());
+                        //Depot
+                        if (banque.deposer(montantDepot, compteActuel)) {
+                            cnx.envoyer("DEPOT OK");
+                        } else {
+                            cnx.envoyer("DEPOT NO");
+                        }
+                        //Si le format n'est pas valide
+                    } catch (NumberFormatException e) {
+                        cnx.envoyer("DEPOT NO");
+                    }
+                    break;
+
+                case "RETRAIT":  //Retire de l'argent du compte actuel
+                    compteActuel = cnx.getNumeroCompteActuel();
+                    banque = serveurBanque.getBanque();
+
+                    //Verifie que le client existe
+                    if (compteActuel == null) {
+                        cnx.envoyer("RETRAIT NO");
+                        break;
+                    }
+
+                    try {
+                        //Conversion String Double
+                        double montantRetrait = Double.parseDouble(evenement.getArgument());
+                        if (banque.retirer(montantRetrait, compteActuel)) {
+                            cnx.envoyer("RETRAIT OK");
+                        } else {
+                            cnx.envoyer("RETRAIT NO");
+                        }
+                        //Si le format n'est pas valide
+                    } catch (NumberFormatException e) {
+                        cnx.envoyer("RETRAIT NO");
+                    }
+                    break;
+
+                case "FACTURE": //Payer une facture
+                    compteActuel = cnx.getNumeroCompteActuel();
+                    banque = serveurBanque.getBanque();
+
+                    //Verifie que le client existe
+                    if (compteActuel == null) {
+                        cnx.envoyer("FACTURE NO");
+                        break;
+                    }
+                    //Separe l'information en 3 partie
+                    String[] factureArgs = evenement.getArgument().split(" ", 3);
+                    if (factureArgs.length < 3) {
+                        //Car il manque d'information
+                        cnx.envoyer("FACTURE NO");
+                        break;
+                    }
+
+                    try {
+                        double montantFacture = Double.parseDouble(factureArgs[0]);
+                        String numeroFacture = factureArgs[1];
+                        String description = factureArgs[2];
+
+                        if (banque.payerFacture(montantFacture, compteActuel, numeroFacture, description)) {
+                            cnx.envoyer("FACTURE OK");
+                        } else {
+                            cnx.envoyer("FACTURE NO");
+                        }
+                        //Si le format n'est pas valide
+                    } catch (NumberFormatException e) {
+                        cnx.envoyer("FACTURE NO");
+                    }
+                    break;
+
+                case "TRANSFER": //Transfer de l'argent a un autre compte
+                    banque = serveurBanque.getBanque();
+                    compteActuel = cnx.getNumeroCompteActuel();
+
+                    //Verifie que le client existe
+                    if (compteActuel == null) {
+                        cnx.envoyer("TRANSFER NO");
+                        break;
+                    }
+
+                    //Separe l'information en 2 partie
+                    String[] transferArgs = evenement.getArgument().split(" ", 2);
+                    if (transferArgs.length < 2) {
+                        //Car il manque d'information
+                        cnx.envoyer("TRANSFER NO");
+                        break;
+                    }
+
+                    try {
+                        //Passer du montant en String en Double
+                        double montantTransfer = Double.parseDouble(transferArgs[0]);
+                        String numeroCompteDestinataire = transferArgs[1];
+
+                        if (banque.transferer(montantTransfer, compteActuel, numeroCompteDestinataire)) {
+                            cnx.envoyer("TRANSFER OK");
+                        } else {
+                            cnx.envoyer("TRANSFER NO");
+                        }
+                    } catch (NumberFormatException e) {
+                        cnx.envoyer("TRANSFER NO");
+                    }
+                    break;
 
 
-                    /******************* TRAITEMENT PAR DÉFAUT *******************/
+                /******************* TRAITEMENT PAR DÉFAUT *******************/
                 default: //Renvoyer le texte recu convertit en majuscules :
                     msg = (evenement.getType() + " " + evenement.getArgument()).toUpperCase();
                     cnx.envoyer(msg);
