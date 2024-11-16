@@ -10,6 +10,9 @@ import com.atoudeft.commun.evenement.Evenement;
 import com.atoudeft.commun.evenement.GestionnaireEvenement;
 import com.atoudeft.commun.net.Connexion;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Cette classe représente un gestionnaire d'événement d'un serveur. Lorsqu'un serveur reçoit un texte d'un client,
  * il crée un événement à partir du texte reçu et alerte ce gestionnaire qui réagit en gérant l'événement.
@@ -20,6 +23,26 @@ import com.atoudeft.commun.net.Connexion;
  */
 public class GestionnaireEvenementServeur implements GestionnaireEvenement {
     private Serveur serveur;
+    private List<ConnexionBanque> activeConnections = new ArrayList<>();
+
+    /**
+     * Verifie si le client est deja connecter a une session
+     *
+     * @param numCompteClient Numero du compte du client
+     * @return true si deja connecter
+     */
+    public boolean isAccountConnected(String numCompteClient) {
+
+        //Verifie a travers une liste de connexions
+        for (ConnexionBanque connexion : activeConnections) {
+
+            //Verifie que la connexion actuelle utilise le bon numero de compte
+            if (numCompteClient.equals(connexion.getNumeroCompteClient())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Construit un gestionnaire d'événements pour un serveur.
@@ -65,6 +88,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("NOUVEAU NO deja connecte");
                         break;
                     }
+                    //On separe l'argument dans une liste, afin d'utliser la partie qu'on veut
                     argument = evenement.getArgument();
                     t = argument.split(":");
                     if (t.length<2) {
@@ -123,10 +147,11 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("SELECT NO non connecte");
                         break;
                     }
-
+                    //Va mettre cheque  ou epargne en minuscule
                     argument = evenement.getArgument().toLowerCase();
                     String compteSelectionner = null;
 
+                    //Verifie si le compte est un compte cheque ou epargne
                     if ("cheque".equals(argument)){
                         compteSelectionner = banque.getNumeroCompteParDefaut(numCompteClient);
                     }
@@ -143,6 +168,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("SELECT NO");
                     }
                     break;
+
                 case "DEPOT":   //Depose de l'argent dans le compte actuel
                     banque = serveurBanque.getBanque();
                     String compteActuel = cnx.getNumeroCompteActuel();
@@ -154,9 +180,10 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     }
 
                     try {
-                        //Conversion String Double
+                        //Conversion String Double afin d'avoir un double comme montant a deposer
                         double montantDepot = Double.parseDouble(evenement.getArgument());
-                        //Depot
+
+                        //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.deposer(montantDepot, compteActuel)) {
                             cnx.envoyer("DEPOT OK");
                         } else {
@@ -179,8 +206,10 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     }
 
                     try {
-                        //Conversion String Double
+                        //Conversion String Double afin d'avoir un double comme montant a retirer
                         double montantRetrait = Double.parseDouble(evenement.getArgument());
+
+                        //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.retirer(montantRetrait, compteActuel)) {
                             cnx.envoyer("RETRAIT OK");
                         } else {
@@ -214,6 +243,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         String numeroFacture = factureArgs[1];
                         String description = factureArgs[2];
 
+                        //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.payerFacture(montantFacture, compteActuel, numeroFacture, description)) {
                             cnx.envoyer("FACTURE OK");
                         } else {
@@ -242,21 +272,57 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("TRANSFER NO");
                         break;
                     }
+                case "CONNECT":
+                    banque = serveurBanque.getBanque();
 
-                    try {
-                        //Passer du montant en String en Double
-                        double montantTransfer = Double.parseDouble(transferArgs[0]);
-                        String numeroCompteDestinataire = transferArgs[1];
+                    //On separe l'argument dans une liste, afin d'utliser la partie qu'on veut
+                    argument = evenement.getArgument();
+                    t = argument.split(":");
 
-                        if (banque.transferer(montantTransfer, compteActuel, numeroCompteDestinataire)) {
-                            cnx.envoyer("TRANSFER OK");
-                        } else {
-                            cnx.envoyer("TRANSFER NO");
-                        }
-                    } catch (NumberFormatException e) {
-                        cnx.envoyer("TRANSFER NO");
+                    //Verifie qu'on a assez d'information (numCompteClient et nip)
+                    if (t.length < 2) {
+                        cnx.envoyer("CONNECT NO"); //Sinon c'est un format invalide
+                        break;
+                    }
+
+
+                    numCompteClient = t[0];
+                    nip = t[1];
+
+                    //Verifie si le client est deja connecter a une session
+                    if (isAccountConnected(numCompteClient)) {
+                        cnx.envoyer("CONNECT NO");
+                        break;
+                    }
+
+                    //Le link au bon client
+                    CompteClient compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
+
+                    //verifie que le compte client existe et qu'on a le bon nip
+                    if (compteClient == null || !compteClient.getNip().equals(nip)) {
+                        cnx.envoyer("CONNECT NO");
+                        break;
+                    }
+
+                    //Permet de storer les connections actives
+                    activeConnections.add(cnx);
+
+                    //Set le numero de compte du client dans l'objet
+                    cnx.setNumeroCompteClient(numCompteClient);
+
+                    //On prend le numero de compte cheque afin de la retourner dans l'objet ConnexionBanque
+                    String numeroCompteCheque = banque.getNumeroCompteParDefaut(numCompteClient);
+
+                    //Verifie que le client a un compte cheque
+                    if (numeroCompteCheque != null) {
+                        cnx.setNumeroCompteActuel(numeroCompteCheque); //On retourne le numero de compte cheque dans l'objet ConnexionBanque
+                        cnx.envoyer("CONNECT OK");
+                    } else {
+                        cnx.envoyer("CONNECT NO");
                     }
                     break;
+
+
 
 
                 /******************* TRAITEMENT PAR DÉFAUT *******************/

@@ -40,4 +40,17 @@ public class CompteClient implements Serializable {
     public List<CompteBancaire> getComptes() {
         return comptes;
     }
+
+    /**
+     * Retourne le nip du compte
+     *
+     * @return nip
+     */
+    public String getNip() {
+        return nip;
+    }
+
+
+
+
 }
