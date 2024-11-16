@@ -160,6 +160,13 @@ public class Banque implements Serializable {
         return null;
     }
 
+    /**
+     * Vérifie si un client possède un compte épargne.
+     *
+     * @param numeroCompteClient Le numéro du compte-client à vérifier.
+     * @return true si le client possède un compte épargne, false sinon.
+     *
+     */
     public boolean clientAEpargne(String numeroCompteClient){
         CompteClient compteClient = (CompteClient) getCompteClient(numeroCompteClient);
         //Verifier qu'il existe
