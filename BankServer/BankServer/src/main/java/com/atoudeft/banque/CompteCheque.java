@@ -43,12 +43,13 @@ public class CompteCheque extends CompteBancaire implements Serializable {
     }
 
     /**
-     *Pour le moment, retourne false et ne fait rien????
+     * Effectue le paiement d'une facture à partir du compte épargne.
+     * Pour le moment, cette méthode retourne false et ne réalise aucune action.
      *
-     * @param numeroFacture
-     * @param montant
-     * @param description
-     * @return
+     * @param numeroFacture Le numéro unique de la facture à payer.
+     * @param montant Le montant de la facture à payer. Doit être strictement positif.
+     * @param description Une description de la facture, par exemple le fournisseur
+     * @return false, car la méthode n'est pas encore implémentée.
      */
     @Override
     public boolean payerFacture(String numeroFacture, double montant, String description) {
@@ -56,11 +57,12 @@ public class CompteCheque extends CompteBancaire implements Serializable {
     }
 
     /**
-     *Pour le moment, retourne false et ne fait rien????
+     * Effectue un transfert d'argent vers un autre compte bancaire.
+     * Pour le moment, cette méthode retourne false et ne réalise aucune action.
      *
-     * @param montant
-     * @param numeroCompteDestinataire
-     * @return
+     * @param montant Le montant à transférer. Doit être strictement positif.
+     * @param numeroCompteDestinataire Le numéro du compte destinataire du transfert.
+     * @return false, car la méthode n'est pas encore implémentée.
      */
     @Override
     public boolean transferer(double montant, String numeroCompteDestinataire) {

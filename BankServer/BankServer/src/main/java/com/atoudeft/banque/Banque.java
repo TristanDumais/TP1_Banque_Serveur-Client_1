@@ -1,6 +1,5 @@
 package com.atoudeft.banque;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ public class Banque implements Serializable {
      * @param numeroCompteClient le numéro du compte-client
      * @return le compte-client s'il a été trouvé. Sinon, retourne null
      */
-    public Object getCompteClient(String numeroCompteClient) {  //JAI CHANGER BOOL TO OBJECT MAIS IDK SI JE POUVAIS
+    public Object getCompteClient(String numeroCompteClient) {
         CompteClient cpt = new CompteClient(numeroCompteClient,"");
         int index = this.comptes.indexOf(cpt);
         if (index != -1)
@@ -30,16 +29,7 @@ public class Banque implements Serializable {
             return null;
     }
 
-    /**
-     * Vérifier qu'un compte-bancaire appartient bien au compte-client.
-     *
-     * @param numeroCompteBancaire numéro du compte-bancaire
-     * @param numeroCompteClient    numéro du compte-client
-     * @return  true si le compte-bancaire appartient au compte-client
-     */
-    public boolean appartientA(String numeroCompteBancaire, String numeroCompteClient) {
-        throw new NotImplementedException();
-    }
+
 
     /**
      * Effectue un dépot d'argent dans un compte-bancaire
@@ -48,8 +38,18 @@ public class Banque implements Serializable {
      * @param numeroCompte numéro du compte
      * @return true si le dépot s'est effectué correctement
      */
-    public boolean deposer(double montant, String numeroCompte) {
-        throw new NotImplementedException();
+    public boolean deposer(double montant, String numeroCompte){
+        //Parcourt les comptes clients pour trouver le compte bancaire
+        for (CompteClient compteClient : comptes) {
+            for (CompteBancaire compte : compteClient.getComptes()) {
+                //S'il trouve le numero correspondant
+                if (compte.getNumero().equals(numeroCompte)) {
+                    //On effectue la transaction
+                    return compte.crediter(montant);
+                }
+            }
+        }
+        return false; //Compte introuvable ou montant invalide
     }
 
     /**
@@ -60,19 +60,20 @@ public class Banque implements Serializable {
      * @return true si le retrait s'est effectué correctement
      */
     public boolean retirer(double montant, String numeroCompte) {
-        throw new NotImplementedException();
+        //Parcourt les comptes clients pour trouver le compte bancaire
+        for (CompteClient compteClient : comptes) {
+            for (CompteBancaire compte : compteClient.getComptes()) {
+                //S'il trouve le numero correspondant
+                if (compte.getNumero().equals(numeroCompte)) {
+                    //On effectue la transaction
+                    return compte.debiter(montant);
+                }
+            }
+        }
+        return false; //Compte introuvable ou montant invalide
     }
 
-    /**
-     * Effectue un transfert d'argent d'un compte à un autre de la même banque
-     * @param montant montant à transférer
-     * @param numeroCompteInitial   numéro du compte d'où sera prélevé l'argent
-     * @param numeroCompteFinal numéro du compte où sera déposé l'argent
-     * @return true si l'opération s'est déroulée correctement
-     */
-    public boolean transferer(double montant, String numeroCompteInitial, String numeroCompteFinal) {
-        throw new NotImplementedException();
-    }
+
 
     /**
      * Effectue un paiement de facture.
@@ -83,7 +84,18 @@ public class Banque implements Serializable {
      * @return true si le paiement s'est bien effectuée
      */
     public boolean payerFacture(double montant, String numeroCompte, String numeroFacture, String description) {
-        throw new NotImplementedException();
+        //Parcourt les comptes clients pour trouver le compte bancaire
+        for (CompteClient compteClient : comptes) {
+            for (CompteBancaire compte : compteClient.getComptes()) {
+                //S'il trouve le numero correspondant
+                if (compte.getNumero().equals(numeroCompte)) {
+                    //On paye la facture
+                    return compte.payerFacture(numeroFacture, montant, description);
+                }
+            }
+        }
+        //Compte introuvable ou montant invalide
+        return false;
     }
 
     /**
@@ -94,12 +106,15 @@ public class Banque implements Serializable {
      * @return true si le compte a été créé correctement
      */
     public boolean ajouter(String numCompteClient, String nip) {
+        //6 a 8 characteres en majuscule (A-Z, 0-9)
         if (!numCompteClient.matches("^[A-Z0-9]{6,8}$")){
             return false;
         }
+        //Verifie que le nip est composer de chiffres uniquement et de 4 ou 5 characteres
         if (!nip.matches("^[0-9]{4,5}$")){
             return false;
         }
+        //Si le compte n'existe pas
         if (getCompteClient(numCompteClient) != null){
             return false;
         }
@@ -110,7 +125,7 @@ public class Banque implements Serializable {
 
         //Ajoute le compte cheque au compte du client
         compteClient.ajouter(compteCheque);
-        //Ne pas oublier
+        //Ne pas oublier de l'ajouter a la liste
         comptes.add(compteClient);
 
         return true;
