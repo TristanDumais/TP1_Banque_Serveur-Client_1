@@ -73,7 +73,49 @@ public class Banque implements Serializable {
         return false; //Compte introuvable ou montant invalide
     }
 
+    /**
+     * Effectue un transfert d'argent entre deux comptes de la banque.
+     *
+     * @param montant Le montant à transférer. Doit être strictement positif.
+     * @param numeroCompteInitial Le numéro du compte source d'où l'argent sera retiré.
+     * @param numeroCompteFinal Le numéro du compte destinataire où l'argent sera déposé.
+     * @return true si le transfert a été effectué avec succès, false sinon.
+     */
 
+    public boolean transferer(double montant, String numeroCompteInitial, String numeroCompteFinal) {
+        //Le montant doit etre positif
+        if (montant <= 0) {
+            return false;
+        }
+        //Recherche des comptes source et destinataire
+        CompteBancaire compteSource = null;
+        CompteBancaire compteDestinataire = null;
+
+        for (CompteClient compteClient : comptes) {
+            for (CompteBancaire compte : compteClient.getComptes()) {
+
+                //On obtient le compte source
+                if (compte.getNumero().equals(numeroCompteInitial)) {
+                    compteSource = compte;
+                }
+                //On obtient le compte destinataire
+                if (compte.getNumero().equals(numeroCompteFinal)) {
+                    compteDestinataire = compte;
+                }
+            }
+        }
+
+        // Vérifie que les deux comptes existent
+        if (compteSource == null || compteDestinataire == null) {
+            return false;
+        }
+        // Débite le compte source et crédite le compte destinataire
+        if (compteSource.debiter(montant)) {
+            return compteDestinataire.crediter(montant);
+        }
+
+        return false;
+    }
 
     /**
      * Effectue un paiement de facture.
