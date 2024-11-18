@@ -20,13 +20,35 @@ public class Banque implements Serializable {
      * @param numeroCompteClient le numéro du compte-client
      * @return le compte-client s'il a été trouvé. Sinon, retourne null
      */
-    public Object getCompteClient(String numeroCompteClient) {
+    public CompteClient getCompteClient(String numeroCompteClient) {
         CompteClient cpt = new CompteClient(numeroCompteClient,"");
         int index = this.comptes.indexOf(cpt);
         if (index != -1)
             return this.comptes.get(index);
         else
             return null;
+    }
+
+    /**
+     * Recherche un compte bancaire spécifique pour un client.
+     *
+     * @param numeroCompteClient le numéro du compte-client
+     * @param typeCompte type du compte bancaire (par exemple, "Cheque", "Epargne")
+     * @return le compte bancaire correspondant ou null si non trouvé
+     */
+    public CompteBancaire getCompteBancaire(String numeroCompteClient, String typeCompte) {
+        CompteClient compteClient = getCompteClient(numeroCompteClient);
+        if (compteClient != null) {
+            // Parcours les comptes du client pour trouver celui correspondant au type
+            for (CompteBancaire compte : compteClient.getComptes()) {
+                if (typeCompte.equals("Cheque") && compte instanceof CompteCheque) {
+                    return compte;
+                } else if (typeCompte.equals("Epargne") && compte instanceof CompteEpargne) {
+                    return compte;
+                }
+            }
+        }
+        return null;
     }
 
 
@@ -116,6 +138,7 @@ public class Banque implements Serializable {
 
         return false;
     }
+
 
     /**
      * Effectue un paiement de facture.

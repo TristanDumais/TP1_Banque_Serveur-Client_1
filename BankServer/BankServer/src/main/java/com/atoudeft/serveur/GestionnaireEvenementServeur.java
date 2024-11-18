@@ -61,7 +61,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
     @Override
     public void traiter(Evenement evenement) {
         Object source = evenement.getSource();
-        ServeurBanque serveurBanque = (ServeurBanque)serveur;
+        ServeurBanque serveurBanque = (ServeurBanque) serveur;
         Banque banque;
         ConnexionBanque cnx;
         String msg, typeEvenement, argument, numCompteClient, nip;
@@ -84,27 +84,25 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     break;
                 /******************* COMMANDES DE GESTION DE COMPTES *******************/
                 case "NOUVEAU": //Crée un nouveau compte-client :
-                    if (cnx.getNumeroCompteClient()!=null) {
+                    if (cnx.getNumeroCompteClient() != null) {
                         cnx.envoyer("NOUVEAU NO deja connecte");
                         break;
                     }
                     //On separe l'argument dans une liste, afin d'utliser la partie qu'on veut
                     argument = evenement.getArgument();
                     t = argument.split(":");
-                    if (t.length<2) {
+                    if (t.length < 2) {
                         cnx.envoyer("NOUVEAU NO");
-                    }
-                    else {
+                    } else {
                         numCompteClient = t[0];
                         nip = t[1];
                         banque = serveurBanque.getBanque();
-                        if (banque.ajouter(numCompteClient,nip)) {
+                        if (banque.ajouter(numCompteClient, nip)) {
                             cnx.setNumeroCompteClient(numCompteClient);
                             cnx.setNumeroCompteActuel(banque.getNumeroCompteParDefaut(numCompteClient));
                             cnx.envoyer("NOUVEAU OK " + t[0] + " cree");
-                        }
-                        else
-                            cnx.envoyer("NOUVEAU NO "+t[0]+" existe");
+                        } else
+                            cnx.envoyer("NOUVEAU NO " + t[0] + " existe");
                     }
                     break;
                 case "EPARGNE": //Creer un compte epargne :
@@ -112,12 +110,12 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     numCompteClient = cnx.getNumeroCompteClient();
 
                     //Si le client n'est pas connecter
-                    if (cnx.getNumeroCompteClient() == null){
+                    if (cnx.getNumeroCompteClient() == null) {
                         cnx.envoyer("EPARGNE NO");
                         break;
                     }
                     //Si le client a deja un compte epargne
-                    if (banque.clientAEpargne(numCompteClient)){
+                    if (banque.clientAEpargne(numCompteClient)) {
                         cnx.envoyer("EPARGNE NO");
                         break;
                     }
@@ -152,19 +150,18 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     String compteSelectionner = null;
 
                     //Verifie si le compte est un compte cheque ou epargne
-                    if ("cheque".equals(argument)){
+                    if ("cheque".equals(argument)) {
                         compteSelectionner = banque.getNumeroCompteParDefaut(numCompteClient);
                     }
-                    if ("epargne".equals(argument)){
+                    if ("epargne".equals(argument)) {
                         compteSelectionner = banque.getNumeroCompteEpargne(numCompteClient);
                     }
 
                     //Verifie si le compte existe
-                    if (compteSelectionner != null){
+                    if (compteSelectionner != null) {
                         cnx.setNumeroCompteActuel(compteSelectionner);
                         cnx.envoyer("SELECT OK");
-                    }
-                    else{
+                    } else {
                         cnx.envoyer("SELECT NO");
                     }
                     break;
@@ -186,6 +183,11 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.deposer(montantDepot, compteActuel)) {
                             cnx.envoyer("DEPOT OK");
+
+                            CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque");
+                            OperationDepot operationDepot = new OperationDepot(montantDepot);
+                            compte.getHistorique().empiler(operationDepot);
+
                         } else {
                             cnx.envoyer("DEPOT NO");
                         }
@@ -212,6 +214,13 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.retirer(montantRetrait, compteActuel)) {
                             cnx.envoyer("RETRAIT OK");
+
+                            // Enregistre le retrait dans l'historique du compte
+                            CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque");
+                            OperationRetrait operationRetrait = new OperationRetrait(montantRetrait);
+                            compte.getHistorique().empiler(operationRetrait); // empile le retrait dans l'historique
+
+
                         } else {
                             cnx.envoyer("RETRAIT NO");
                         }
@@ -246,6 +255,13 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         //Si l'operation a fonctionner, sa retourne true et sa envoids ... OK
                         if (banque.payerFacture(montantFacture, compteActuel, numeroFacture, description)) {
                             cnx.envoyer("FACTURE OK");
+
+                            // Enregistre le paiement de la facture dans l'historique du compte
+                            CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque");
+                            OperationFacture operationFacture = new OperationFacture(montantFacture, numeroFacture, description);
+                            compte.getHistorique().empiler(operationFacture);
+
+
                         } else {
                             cnx.envoyer("FACTURE NO");
                         }
@@ -254,7 +270,6 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("FACTURE NO");
                     }
                     break;
-
                 case "TRANSFER": //Transfer de l'argent a un autre compte
                     banque = serveurBanque.getBanque();
                     compteActuel = cnx.getNumeroCompteActuel();
@@ -280,6 +295,13 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         //Essaie d'effectuer le transfer
                         if (banque.transferer(montantTransfer, compteActuel, numeroCompteDestinataire)) {
                             cnx.envoyer("TRANSFER OK");
+
+                            // Enregistre le transfert dans l'historique du compte
+                            CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque");
+                            OperationTransfer operationTransfer = new OperationTransfer(montantTransfer, numeroCompteDestinataire);
+                            compte.getHistorique().empiler(operationTransfer);
+
+
                         } else {
                             cnx.envoyer("TRANSFER NO");
                         }
@@ -288,6 +310,26 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.envoyer("TRANSFER NO format invalide");
                     }
                     break;
+
+                case "HIST":
+                    banque = serveurBanque.getBanque();
+                    compteActuel = cnx.getNumeroCompteActuel();
+
+                    //Verifie que le client existe
+                    if (compteActuel == null) {
+                        cnx.envoyer("HIST NO");
+                        break;
+                    }
+
+                    CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque");
+
+                    if (compte.getHistorique().estVide()) {
+                        cnx.envoyer("HIST NO");
+                        break;
+                    } else {
+                        compte.getHistorique().afficherHistorique();
+                    }
+
                 case "CONNECT":
                     banque = serveurBanque.getBanque();
 
@@ -312,7 +354,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     }
 
                     //Le link au bon client
-                    CompteClient compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
+                    compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
 
                     //verifie que le compte client existe et qu'on a le bon nip
                     if (compteClient == null || !compteClient.getNip().equals(nip)) {
@@ -339,13 +381,12 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     break;
 
 
-
-
                 /******************* TRAITEMENT PAR DÉFAUT *******************/
                 default: //Renvoyer le texte recu convertit en majuscules :
                     msg = (evenement.getType() + " " + evenement.getArgument()).toUpperCase();
                     cnx.envoyer(msg);
             }
         }
+
     }
 }
