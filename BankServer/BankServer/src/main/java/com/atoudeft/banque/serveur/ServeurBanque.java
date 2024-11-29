@@ -15,7 +15,7 @@ import java.util.ListIterator;
  * @since 2024-08-20
  */
 public class ServeurBanque extends Serveur {
-    public static final int DELAI_INACTIVITE = 30000;
+    public static final int DELAI_INACTIVITE = 300009999;
     //Référence vers la banque gérée par ce serveur :
     private Banque banque;
     //Thread qui supprime les connexions inactives :
@@ -44,18 +44,26 @@ public class ServeurBanque extends Serveur {
      * @return boolean true, si le serveur a été démarré correctement, false, si le serveur a déjà été démarré ou s'il
      * y a un problème de connexion
      */
-    @Override
     public boolean demarrer() {
         if (super.demarrer()) {
-            this.banque = EntreesSorties.charger();
-            if (this.banque==null)
-                this.banque = new Banque("BankEts");
-            threadDesInactifs = new ThreadDesInactifs(this);
-            threadDesInactifs.start();
-            return true;
+            try {
+                this.banque = EntreesSorties.charger(); // Charge une banque existante
+                if (this.banque == null) {
+                    System.out.println("Aucune banque sauvegardée trouvée. Création d'une nouvelle banque.");
+                    this.banque = new Banque("BankEts");
+                }
+                threadDesInactifs = new ThreadDesInactifs(this);
+                threadDesInactifs.start();
+                System.out.println("Serveur démarré avec succès.");
+                return true;
+            } catch (Exception e) {
+                System.err.println("Erreur lors du démarrage du serveur : " + e.getMessage());
+                return false;
+            }
         }
         return false;
     }
+
     /**
      * Arrête le serveur en arrêtant les threads qui écoutent l'arrivée de client et l'arrivée de texte et les threads
      * qui supprime les connexions inactives et qui traite les nouveaux clients.

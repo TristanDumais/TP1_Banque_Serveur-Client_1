@@ -1,44 +1,55 @@
 package com.programmes;
 
 import com.atoudeft.client.Client;
+import com.atoudeft.client.Config;
 
 import java.util.Scanner;
 
-/**
- * Programme simple de démonstration d'un client. Le programme utilise un client pour se connecter à un serveur
- * et lui envoie les textes saisis par l'utilisateur jusqu'à ce que celui-ci saisisse le texte EXIT.
- *
- * @author Abdelmoumène Toudeft (Abdelmoumene.Toudeft@etsmtl.ca)
- * @version 1.0
- * @since 2023-09-01
- */
 public class ProgrammeClientTP1 {
 
-	/**
-	 * Méthode principale du programme.
-	 *
-	 * @param args Arguments du programme
-	 */
 	public static void main(String[] args) {
+		// Configuration par défaut
+		String host = "localhost";
+		int port = 8080;
 
-		Scanner clavier = new Scanner(System.in);
-		Client client = new Client();
-		String saisie;
+		// Initialisation du client
+		Client client = new Client(Config.ADRESSE_SERVEUR, Config.PORT_SERVEUR);
 
-		if (!client.connecter()) {
-			System.out.println("Serveur introuvable a l'adresse " + client.getAdrServeur()
-					+ " sur le port " + client.getPortServeur());
-			return;
+		try {
+			// Connexion au serveur
+			System.out.println("Connexion au serveur " + host + " sur le port " + port + "...");
+			boolean connecte = client.connecter();
+
+			if (connecte) {
+				System.out.println("Connexion réussie. Tapez vos commandes. Tapez EXIT pour quitter.");
+
+				// Gestion des commandes utilisateur
+				Scanner scanner = new Scanner(System.in);
+				String commande;
+
+				do {
+					System.out.print("> ");
+					commande = scanner.nextLine();
+
+					// Envoi de la commande au serveur
+					client.envoyer(commande);
+
+					// Confirmation d'envoi
+					System.out.println("Commande envoyée au serveur : " + commande);
+
+				} while (!commande.equalsIgnoreCase("EXIT"));
+
+				System.out.println("Déconnexion...");
+			} else {
+				System.out.println("Impossible de se connecter au serveur.");
+			}
+		} catch (Exception e) {
+			System.out.println("Erreur : " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			// Assurer la fermeture de la connexion
+			client.deconnecter();
+			System.out.println("Client déconnecté.");
 		}
-		System.out.println("Vous etes connectes au serveur à l'adresse " + client.getAdrServeur()
-				+ " sur le port " + client.getPortServeur());
-		System.out.println("Le serveur vous renvoie votre texte converti en majuscules");
-
-		System.out.println("Saisissez vos textes (EXIT pour quitter) :");
-		do {
-			saisie = clavier.nextLine();
-			client.envoyer(saisie);
-		}while (!"EXIT".equals(saisie));
-		//Lorsque le client envoie "EXIT", le serveur répond "END." et le gestionnaire d'événement déconnecte le client
 	}
 }

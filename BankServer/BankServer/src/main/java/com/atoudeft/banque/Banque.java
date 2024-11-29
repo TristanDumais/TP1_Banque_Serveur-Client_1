@@ -21,13 +21,14 @@ public class Banque implements Serializable {
      * @return le compte-client s'il a été trouvé. Sinon, retourne null
      */
     public CompteClient getCompteClient(String numeroCompteClient) {
-        CompteClient cpt = new CompteClient(numeroCompteClient,"");
-        int index = this.comptes.indexOf(cpt);
-        if (index != -1)
-            return this.comptes.get(index);
-        else
-            return null;
+        for (CompteClient compte : comptes) {
+            if (compte.getNumeroCompteClient().equals(numeroCompteClient)) {
+                return compte;
+            }
+        }
+        return null;
     }
+
 
     /**
      * Recherche un compte bancaire spécifique pour un client.
@@ -184,15 +185,15 @@ public class Banque implements Serializable {
             return false;
         }
 
-        CompteClient compteClient = new CompteClient(numCompteClient, nip);
-        String numeroCompteBancaire = CompteBancaire.genereNouveauNumero();
-        CompteCheque compteCheque = new CompteCheque(numeroCompteBancaire, 0);
+        // Vérifie si le compte existe déjà
+        for (CompteClient compte : comptes) {
+            if (compte.getNumeroCompteClient().equals(numCompteClient)) {
+                return false; // Le compte existe déjà
+            }
+        }
 
-        //Ajoute le compte cheque au compte du client
-        compteClient.ajouter(compteCheque);
-        //Ne pas oublier de l'ajouter a la liste
-        comptes.add(compteClient);
-
+        // Ajoute un nouveau compte à la liste
+        comptes.add(new CompteClient(numCompteClient, nip));
         return true;
     }
 

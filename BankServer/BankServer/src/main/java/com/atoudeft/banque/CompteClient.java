@@ -22,6 +22,14 @@ public class CompteClient implements Serializable {
     }
 
     /**
+     * Getter pour le numéro de compte.
+     *
+     * @return Le numéro du compte-client
+     */
+    public String getNumeroCompteClient() {
+        return this.numero;
+    }
+    /**
      * Ajoute un compte bancaire au compte-client.
      *
      * @param compte le compte bancaire
@@ -50,7 +58,20 @@ public class CompteClient implements Serializable {
         return nip;
     }
 
+    // Redéfinition de equals
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true; // Même référence
+        if (obj == null || getClass() != obj.getClass()) return false; // Classe différente ou null
+        CompteClient that = (CompteClient) obj;
+        return this.numero.equals(that.numero); // Compare uniquement le numéro de compte
+    }
 
-
-
+    // Redéfinition de hashCode
+    @Override
+    public int hashCode() {
+        return this.numero.hashCode(); // Utilise le hash du numéro
+    }
 }
+
+

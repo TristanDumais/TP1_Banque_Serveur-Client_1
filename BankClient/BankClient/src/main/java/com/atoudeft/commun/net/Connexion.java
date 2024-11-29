@@ -66,11 +66,16 @@ public class Connexion {
 	 *
 	 * @param texte String texte envoyé
 	 */
-	public void envoyer(String texte)
-	 {
-		os.print(texte);
-		os.flush();
-	 }
+	public void envoyer(String texte) {
+		try {
+			os.print(texte);
+			os.flush();
+		} catch (Exception e) {
+			System.err.println("Erreur lors de l'envoi du message : " + texte + " | " + e.getMessage());
+		}
+	}
+
+
 	/**
 	 * Ferme la connexion en fermant le socket et les flux utilisés.
 	 *

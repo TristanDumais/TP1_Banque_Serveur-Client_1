@@ -1,41 +1,35 @@
 package com.programmes;
 
 import com.atoudeft.serveur.Config;
-import com.atoudeft.serveur.Serveur;
 import com.atoudeft.banque.serveur.ServeurBanque;
 
 import java.util.Scanner;
 
-/**
- * Programme simple de démonstration d'un serveur. Le programme démarre un serveur qui se met à écouter
- * l'arrivée de connexions.
- *
- * @author Abdelmoumène Toudeft (Abdelmoumene.Toudeft@etsmtl.ca)
- * @version 1.0
- * @since 2023-09-01
- */
 public class ProgrammeServeurTP1 {
-	/**
-	 * Méthode principale du programme.
-	 *
-	 * @param args Arguments du programme
-	 */
+
     public static void main(String[] args) {
+        // Initialisation du serveur
+        ServeurBanque serveur = new ServeurBanque(Config.PORT_SERVEUR);
 
-        Scanner clavier = new Scanner(System.in);
-        String saisie;
+        try {
+            // DÃ©marrage du serveur
+            System.out.println("DÃ©marrage du serveur sur le port " + Config.PORT_SERVEUR + "...");
+            boolean serveurDemarre = serveur.demarrer();
 
-        Serveur serveur = new ServeurBanque(Config.PORT_SERVEUR);
-        if (serveur.demarrer()) {
-            System.out.println("Serveur a l'ecoute sur le port " + serveur.getPort());
+            if (serveurDemarre) {
+                System.out.println("Serveur dÃ©marrÃ© avec succÃ¨s. Appuyez sur ENTER pour arrÃªter.");
+                // Attend une commande pour arrÃªter le serveur
+                new Scanner(System.in).nextLine();
+            } else {
+                System.out.println("Ã‰chec du dÃ©marrage du serveur.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erreur : " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // ArrÃªt propre du serveur
+            serveur.arreter();
+            System.out.println("Serveur arrÃªtÃ©.");
         }
-
-        System.out.println("Saisissez EXIT pour arreter le serveur.");
-        saisie = clavier.nextLine();
-        while (!"EXIT".equals(saisie)) {
-            System.out.println("??? Saisissez EXIT pour arreter le serveur.");
-            saisie = clavier.nextLine();
-        }
-        serveur.arreter();
     }
 }

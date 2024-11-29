@@ -37,6 +37,9 @@ public class Client implements Lecteur {
     private GestionnaireEvenement gestionnaireEvenement;
     private ThreadEcouteurDeTexte ecouteurTexte;
 
+    public Client(String adresseServeur, int portServeur) {
+    }
+
     /**
      * Permet de fournir un autre gestionnaire d'événements en remplacement de celui construit par défaut.
      *
@@ -59,18 +62,20 @@ public class Client implements Lecteur {
             return resultat;
 
         try {
+            System.out.println("Tentative de connexion au serveur " + adrServeur + ":" + portServeur);
             Socket socket = new Socket(adrServeur, portServeur);
             connexion = new Connexion(socket);
 
-            //On crée l'ecouteur d'evenements par défaut pour le client :
+            System.out.println("Connexion réussie, initialisation des gestionnaires.");
             gestionnaireEvenement = new GestionnaireEvenementClient(this);
 
-            //Démarrer le thread inspecteur de texte:
             ecouteurTexte = new ThreadEcouteurDeTexte(this);
-            ecouteurTexte.start();  //la methode run() de l'ecouteur de texte s'execute en parallele avec le reste du programme.
+            ecouteurTexte.start();
+            System.out.println("Thread d'écoute démarré.");
             resultat = true;
             this.setConnecte(true);
         } catch (IOException e) {
+            System.err.println("Erreur lors de la connexion : " + e.getMessage());
             this.deconnecter();
         }
         return resultat;
@@ -83,16 +88,25 @@ public class Client implements Lecteur {
      * @return boolean true, si le client s'est déconnecté, false, s'il était déjà déconnecté
      */
     public boolean deconnecter() {
-        if (!isConnecte())
+        if (!isConnecte()) {
+            System.out.println("Déjà déconnecté.");
             return false;
+        }
 
-        connexion.envoyer("exit");
-        connexion.close();
-        if (ecouteurTexte != null)
-            ecouteurTexte.interrupt();
-        this.setConnecte(false);
+        try {
+            connexion.envoyer("exit");
+            connexion.close();
+            if (ecouteurTexte != null)
+                ecouteurTexte.interrupt();
+            this.setConnecte(false);
+            System.out.println("Déconnexion réussie.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la déconnexion : " + e.getMessage());
+            return false;
+        }
         return true;
     }
+
     /**
      * Cette méthode vérifie s'il y a du texte qui arrive sur la connexion du client et, si c'est le cas, elle crée
      * un événement contenant les données du texte et demande au gestionnaire d'événement client de traiter l'événement.

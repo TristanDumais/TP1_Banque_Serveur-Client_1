@@ -31,13 +31,17 @@ public class EntreesSorties {
      */
     public static Banque charger() {
         try (ObjectInputStream ios = new ObjectInputStream(new FileInputStream(NOM_FICHIER_BANQUE))) {
-            return (Banque)ios.readObject();
+            return (Banque) ios.readObject();
         } catch (FileNotFoundException e) {
+            System.err.println("Fichier banque introuvable : " + NOM_FICHIER_BANQUE);
             return null;
         } catch (IOException e) {
+            System.err.println("Erreur d'E/S lors du chargement de la banque : " + e.getMessage());
             return null;
         } catch (ClassNotFoundException e) {
+            System.err.println("Classe Banque introuvable : " + e.getMessage());
             return null;
         }
     }
+
 }
