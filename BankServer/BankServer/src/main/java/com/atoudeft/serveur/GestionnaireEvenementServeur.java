@@ -98,16 +98,10 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         nip = t[1];
                         banque = serveurBanque.getBanque();
                         if (banque.ajouter(numCompteClient, nip)) {
-                            // Associer le client à cette connexion
                             cnx.setNumeroCompteClient(numCompteClient);
 
-                            // Créer un compte chèque par défaut pour le client
-                            String numeroCompteCheque = CompteBancaire.genereNouveauNumero();
-                            CompteClient compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
-                            CompteBancaire compteCheque = new CompteCheque(numeroCompteCheque, 0);
-                            compteClient.ajouter(compteCheque);
-
-                            // Mettre à jour le compte par défaut pour les opérations
+                            // Récupérez et configurez le compte chèque par défaut
+                            String numeroCompteCheque = banque.getNumeroCompteParDefaut(numCompteClient);
                             cnx.setNumeroCompteActuel(numeroCompteCheque);
                             cnx.setTypeCompte("cheque");
 
@@ -176,6 +170,10 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         cnx.setNumeroCompteActuel(compteSelectionner);
                         cnx.envoyer("SELECT OK");
                         cnx.setTypeCompte(argument);
+
+                        // Log pour débogage
+                        System.out.println("Compte sélectionné : " + compteSelectionner + ", Type : " + argument);
+
                     } else {
                         cnx.envoyer("SELECT NO");
                     }
@@ -187,9 +185,13 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
 
                     //Verifie que le compte existe
                     if (compteActuel == null) {
-                        cnx.envoyer("DEPOT NO");
+                        cnx.envoyer("DEPOT NO aucun compte sélectionné");
                         break;
                     }
+
+                    // Log pour débogage
+                    System.out.println("Tentative de dépôt : compte=" + compteActuel + ", type=" + cnx.getTypeCompte());
+
 
                     //Récupère le compte bancaire à partir du numéro actuel
                     CompteBancaire compte = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());

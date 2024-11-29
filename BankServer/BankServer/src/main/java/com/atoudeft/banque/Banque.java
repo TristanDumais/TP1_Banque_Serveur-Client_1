@@ -33,24 +33,32 @@ public class Banque implements Serializable {
     /**
      * Recherche un compte bancaire spécifique pour un client.
      *
-     * @param numeroCompteClient le numéro du compte-client
+     * @param numeroCompte le numéro du compte-client
      * @param typeCompte type du compte bancaire (par exemple, "Cheque", "Epargne")
      * @return le compte bancaire correspondant ou null si non trouvé
      */
-    public CompteBancaire getCompteBancaire(String numeroCompteClient, String typeCompte) {
-        CompteClient compteClient = getCompteClient(numeroCompteClient);
-        if (compteClient != null) {
-            // Parcours les comptes du client pour trouver celui correspondant au type
+    public CompteBancaire getCompteBancaire(String numeroCompte, String typeCompte) {
+        // Parcourt tous les comptes clients
+        for (CompteClient compteClient : comptes) {
+            // Parcourt chaque compte bancaire associé au client
             for (CompteBancaire compte : compteClient.getComptes()) {
-                if (typeCompte.equals("Cheque") && compte instanceof CompteCheque) {
-                    return compte;
-                } else if (typeCompte.equals("Epargne") && compte instanceof CompteEpargne) {
-                    return compte;
+                // Vérifie si le numéro correspond
+                if (compte.getNumero().equals(numeroCompte)) {
+                    // Vérifie le type du compte
+                    if (typeCompte.equals("cheque") && compte instanceof CompteCheque) {
+                        return compte;
+                    } else if (typeCompte.equals("epargne") && compte instanceof CompteEpargne) {
+                        return compte;
+                    }
                 }
             }
         }
+
+        // Ajout d'un log en cas de compte introuvable
+        System.out.println("Compte bancaire introuvable : numeroClient=" + numeroCompte + ", type=" + typeCompte);
         return null;
     }
+
 
 
 
@@ -191,9 +199,19 @@ public class Banque implements Serializable {
                 return false; // Le compte existe déjà
             }
         }
+        // Créez un nouveau client
+        CompteClient nouveauClient = new CompteClient(numCompteClient, nip);
 
-        // Ajoute un nouveau compte à la liste
-        comptes.add(new CompteClient(numCompteClient, nip));
+        // Ajoutez un compte chèque par défaut
+        String numeroCompteCheque = CompteBancaire.genereNouveauNumero();
+        CompteCheque compteCheque = new CompteCheque(numeroCompteCheque, 0);
+        nouveauClient.ajouter(compteCheque);
+
+        // Log pour débogage
+        System.out.println("Compte chèque créé : " + numeroCompteCheque + " pour le client " + numCompteClient);
+
+        // Ajoutez le client à la banque
+        comptes.add(nouveauClient);
         return true;
     }
 
@@ -204,7 +222,7 @@ public class Banque implements Serializable {
      * @return numéro du compte-chèque du client ayant le numéro de compte-client
      */
     public String getNumeroCompteParDefaut(String numCompteClient) {
-        CompteClient compteClient = (CompteClient) getCompteClient(numCompteClient);
+        CompteClient compteClient = getCompteClient(numCompteClient);
         //Verifier qu'il existe
         if (compteClient != null) {
 
