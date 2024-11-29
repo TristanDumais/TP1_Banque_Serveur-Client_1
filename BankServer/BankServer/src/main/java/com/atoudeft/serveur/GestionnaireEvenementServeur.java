@@ -1,9 +1,6 @@
 package com.atoudeft.serveur;
 
-import com.atoudeft.banque.Banque;
-import com.atoudeft.banque.CompteBancaire;
-import com.atoudeft.banque.CompteClient;
-import com.atoudeft.banque.CompteEpargne;
+import com.atoudeft.banque.*;
 import com.atoudeft.banque.serveur.ConnexionBanque;
 import com.atoudeft.banque.serveur.ServeurBanque;
 import com.atoudeft.commun.evenement.Evenement;
@@ -60,6 +57,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
      */
     @Override
     public void traiter(Evenement evenement) {
+
         Object source = evenement.getSource();
         ServeurBanque serveurBanque = (ServeurBanque) serveur;
         Banque banque;
@@ -67,11 +65,13 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
         String msg, typeEvenement, argument, numCompteClient, nip;
         String[] t;
 
+
         if (source instanceof Connexion) {
             cnx = (ConnexionBanque) source;
             System.out.println("SERVEUR: Recu : " + evenement.getType() + " " + evenement.getArgument());
             typeEvenement = evenement.getType();
             cnx.setTempsDerniereOperation(System.currentTimeMillis());
+
             switch (typeEvenement) {
                 /******************* COMMANDES GÉNÉRALES *******************/
                 case "EXIT": //Ferme la connexion avec le client qui a envoyé "EXIT":
@@ -98,9 +98,20 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         nip = t[1];
                         banque = serveurBanque.getBanque();
                         if (banque.ajouter(numCompteClient, nip)) {
+                            // Associer le client à cette connexion
                             cnx.setNumeroCompteClient(numCompteClient);
-                            cnx.setNumeroCompteActuel(banque.getNumeroCompteParDefaut(numCompteClient));
-                            cnx.envoyer("NOUVEAU OK " + t[0] + " cree");
+
+                            // Créer un compte chèque par défaut pour le client
+                            String numeroCompteCheque = CompteBancaire.genereNouveauNumero();
+                            CompteClient compteClient = (CompteClient) banque.getCompteClient(numCompteClient);
+                            CompteBancaire compteCheque = new CompteCheque(numeroCompteCheque, 0);
+                            compteClient.ajouter(compteCheque);
+
+                            // Mettre à jour le compte par défaut pour les opérations
+                            cnx.setNumeroCompteActuel(numeroCompteCheque);
+                            cnx.setTypeCompte("cheque");
+
+                            cnx.envoyer("NOUVEAU OK " + t[0] + " cree avec compte cheque par defaut");
                         } else {
                             cnx.envoyer("NOUVEAU NO " + t[0] + " existe");
                         }
@@ -164,6 +175,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     if (compteSelectionner != null) {
                         cnx.setNumeroCompteActuel(compteSelectionner);
                         cnx.envoyer("SELECT OK");
+                        cnx.setTypeCompte(argument);
                     } else {
                         cnx.envoyer("SELECT NO");
                     }
@@ -180,7 +192,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                     }
 
                     //Récupère le compte bancaire à partir du numéro actuel
-                    CompteBancaire compte = banque.getCompteBancaire(compteActuel, "Cheque"); // Remplacez "Cheque" par le type de compte si nécessaire
+                    CompteBancaire compte = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());
                     if (compte == null) {
                         cnx.envoyer("DEPOT NO compte introuvable");
                         break;
@@ -226,7 +238,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                             cnx.envoyer("RETRAIT OK");
 
                             // Enregistre le retrait dans l'historique du compte
-                            CompteBancaire comptee = banque.getCompteBancaire(compteActuel, "Cheque");
+                            CompteBancaire comptee = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());
                             OperationRetrait operationRetrait = new OperationRetrait(montantRetrait);
                             comptee.getHistorique().empiler(operationRetrait); // empile le retrait dans l'historique
 
@@ -267,7 +279,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                             cnx.envoyer("FACTURE OK");
 
                             // Enregistre le paiement de la facture dans l'historique du compte
-                            CompteBancaire compteee = banque.getCompteBancaire(compteActuel, "Cheque");
+                            CompteBancaire compteee = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());
                             OperationFacture operationFacture = new OperationFacture(montantFacture, numeroFacture, description);
                             compteee.getHistorique().empiler(operationFacture);
 
@@ -307,7 +319,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                             cnx.envoyer("TRANSFER OK");
 
                             // Enregistre le transfert dans l'historique du compte
-                            CompteBancaire compteee = banque.getCompteBancaire(compteActuel, "Cheque");
+                            CompteBancaire compteee = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());
                             OperationTransfer operationTransfer = new OperationTransfer(montantTransfer, numeroCompteDestinataire);
                             compteee.getHistorique().empiler(operationTransfer);
 
@@ -331,7 +343,7 @@ public class GestionnaireEvenementServeur implements GestionnaireEvenement {
                         break;
                     }
 
-                    CompteBancaire compteeee = banque.getCompteBancaire(compteActuel, "Cheque");
+                    CompteBancaire compteeee = banque.getCompteBancaire(compteActuel, cnx.getTypeCompte());
 
                     if (compteeee.getHistorique().estVide()) {
                         cnx.envoyer("HIST NO");

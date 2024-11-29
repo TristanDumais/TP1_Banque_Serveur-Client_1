@@ -11,6 +11,7 @@ public class ConnexionBanque extends Connexion {
     private long tempsDerniereOperation;
     //Le numéro du compte sur lequel se font les opérations en ce moment :
     private String numeroCompteActuel;
+    private String typeCompte;
     /**
      * Construit une connexion sur un socket, initialisant les flux de caractères utilisés par le socket et le moment
      * de la dernière opération effectuée par client utilisant cette connexion.
@@ -82,5 +83,14 @@ public class ConnexionBanque extends Connexion {
      */
     public void setNumeroCompteActuel(String numeroCompteActuel) {
         this.numeroCompteActuel = numeroCompteActuel;
+    }
+
+    public String getTypeCompte() {
+        return typeCompte;
+    }
+
+    // Setter pour typeCompte
+    public void setTypeCompte(String typeCompte) {
+        this.typeCompte = typeCompte;
     }
 }
